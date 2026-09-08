@@ -17,7 +17,7 @@ Before sending a pull request:
 
 - Run the ordinary tests in an environment without a Grok executable.
 - Do not commit local evidence, logs, task IDs, databases, personal paths,
-  secrets, downloaded executables or product artwork.
+  secrets, downloaded executables or third-party product artwork.
 - Describe which platforms and live scenarios were actually verified.
 - Keep the plugin manifest and runtime version consistent.
 

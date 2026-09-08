@@ -1,4 +1,5 @@
 import io
+import base64
 import json
 import os
 from pathlib import Path
@@ -146,7 +147,7 @@ class ChatGPTTests(unittest.TestCase):
         for tool in responses[2]["result"]["tools"]:
             self.assertIn("destructiveHint", tool["annotations"])
 
-    def test_real_stdio_entrypoint_without_optional_artwork(self):
+    def test_real_stdio_entrypoint_with_project_artwork(self):
         config = Path(self.temp.name) / "chatgpt.json"
         config.write_text(json.dumps({"schema_version": 1, "client_scope": self.scope,
                                       "workspaces": {}}), encoding="utf-8")
@@ -169,7 +170,9 @@ class ChatGPTTests(unittest.TestCase):
             **({"creationflags": 0x08000000} if os.name == "nt" else {}))
         self.assertEqual(result.returncode, 0, result.stderr)
         messages = {r["id"]: r for r in map(json.loads, result.stdout.splitlines())}
-        self.assertNotIn("icons", messages[1]["result"]["serverInfo"])
+        icon = messages[1]["result"]["serverInfo"]["icons"][0]
+        self.assertEqual(icon["mimeType"], "image/png")
+        self.assertTrue(base64.b64decode(icon["src"].partition(",")[2]).startswith(b"\x89PNG\r\n\x1a\n"))
         self.assertEqual(len(messages[2]["result"]["tools"]), 11)
         self.assertEqual(messages[3]["result"]["structuredContent"]["workspaces"], [])
         self.assertTrue(messages[4]["result"]["isError"])

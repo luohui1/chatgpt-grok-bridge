@@ -1,109 +1,195 @@
-# ChatGPT Grok Bridge
+<p align="center">
+  <img src="plugins/grok-subagent/assets/bridge-mark.png" width="128" height="128" alt="ChatGPT Grok Bridge: an original bridge mark">
+</p>
 
-**Unofficial, experimental, Windows-first.**
+<h1 align="center">ChatGPT Grok Bridge</h1>
 
-An unofficial ChatGPT plugin bridge to your local Grok Build CLI, using
-OpenAI Secure MCP Tunnel and native ACP. Also supports Codex through local MCP.
-Background jobs remain controllable across client disconnects.
+<p align="center">
+  <strong>A private connection from ChatGPT to your local Grok Build.</strong><br>
+  Start a task. Follow its progress. Stay in control.
+</p>
 
-让 ChatGPT 通过私人隧道连接本机 Grok，管理后台任务、追问、中断和结果。
-ChatGPT 账号接通需要单独配置，当前没有宣称完成云端端到端验证。
+<p align="center">
+  <a href="https://github.com/luohui1/chatgpt-grok-bridge/actions/workflows/tests.yml"><img src="https://github.com/luohui1/chatgpt-grok-bridge/actions/workflows/tests.yml/badge.svg?branch=main" alt="Windows tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-47E6AF?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square" alt="Python 3.11 or later">
+  <img src="https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square" alt="Windows">
+  <img src="https://img.shields.io/badge/status-experimental-E6B84A?style=flat-square" alt="Experimental">
+</p>
 
-This project is not affiliated with or endorsed by Grok/xAI or OpenAI.
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">Architecture</a> ·
+  <a href="#toolbox">Toolbox</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="README.zh-CN.md">简体中文</a>
+</p>
 
-## 功能
+---
 
-- 非阻塞派发，持久任务 ID、增量结果和命令回执。
-- 同会话追问、中断、权限回应、关闭和显式恢复。
-- Windows 进程树清理和保守的失联进程身份核验。
-- 每个任务保存运行代码快照，减少插件更新对已有任务的影响。
-- 默认关闭 Cursor/Claude MCP 扫描，保留按任务继承集成的选项。
-- ChatGPT 私人入口：工作目录别名、任务可见性隔离和完整文字结果分页。
+An open-source, unofficial plugin bridge that connects ChatGPT to the Grok Build
+CLI on your own Windows machine through **OpenAI Secure MCP Tunnel** and **native
+ACP**. A direct local MCP entry point also supports Codex.
 
-## 安装
+> [!IMPORTANT]
+> **Local integration tested. ChatGPT cloud end-to-end connection not yet verified.**
+> ChatGPT requires separate tunnel permissions, account setup and a running local
+> client. This project is not affiliated with or endorsed by OpenAI or Grok/xAI.
 
-实际运行需要 Windows、Python 3.11+、官方 Grok Build CLI 和你自己的有效登录。
-本项目不附带 CLI、账号、密钥或模型额度。
+## Why this bridge?
 
-**ChatGPT：** 按 [私人接入指南](plugins/grok-subagent/CHATGPT.md) 配置本机入口、
-账号权限和 Secure MCP Tunnel。仅安装本地插件不会自动注册 ChatGPT 连接。
+| Capability | What it gives you |
+| --- | --- |
+| **Native protocol** | ACP over stdio, not terminal screenshots or simulated keystrokes. |
+| **Durable background jobs** | An immediate job ID, incremental results and explicit command receipts. |
+| **Session control** | Follow-up messages, cancellation, permission responses, close and explicit recovery. |
+| **Local ownership** | Workspace locks, owned-process cleanup and per-job runtime snapshots. |
+| **Private ChatGPT entry point** | Workspace aliases, client-scoped task visibility and paginated full results. |
 
-**Codex：**
+Grok stays on your machine. Prompts and tool results still travel through the
+configured services; **local execution does not mean offline inference**.
+
+## Quick start
+
+**Requirements:** Windows, Python 3.11+, the official Grok Build CLI, and your own
+working Grok login. No CLI binaries, credentials or model credits are included.
+
+### ChatGPT
+
+Prepare the local adapter:
+
+```powershell
+git clone https://github.com/luohui1/chatgpt-grok-bridge.git
+cd chatgpt-grok-bridge
+python plugins/grok-subagent/scripts/chatgpt_setup.py init
+python plugins/grok-subagent/scripts/chatgpt_setup.py install-client
+python plugins/grok-subagent/scripts/chatgpt_setup.py status
+```
+
+Then follow the **[private ChatGPT setup guide](plugins/grok-subagent/CHATGPT.md)**
+to select a workspace, configure your actual tunnel and connect your ChatGPT
+account. Preparation alone does not establish a cloud connection.
+
+> [!WARNING]
+> No workspace is enabled by default. Enabling execution lets Grok act with your
+> local account's privileges. This is **not an OS sandbox**. Keep the tunnel
+> private and owner-only.
+
+### Codex
+
+Install the local MCP plugin from this repository's marketplace:
 
 ```powershell
 codex plugin marketplace add luohui1/chatgpt-grok-bridge
 codex plugin add grok-subagent@grok-subagent-community
 ```
 
-新开一个 Codex 任务以加载工具。不要同时启用另一个来源的同名本地插件副本。
-也可克隆仓库后从本地 marketplace 安装。
-为兼容已有安装，内部插件 ID `grok-subagent`、工具名和 marketplace ID 保持不变。
+Open a new Codex task to load the plugin. Avoid enabling a second copy from
+another marketplace. The internal `grok-subagent` ID is retained for compatibility.
 
-## 使用
+### Your first task
 
-让 Codex 使用 Grok 在明确授权的工作目录内执行任务。
-先调用 `grok_doctor`，再通过 `grok_start` 获取任务 ID。
+Ask your connected assistant:
 
-| 工具 | 用途 |
+> Use Grok in the workspace I authorize to inspect the test setup.
+> Do not modify files. Start it in the background and report its findings.
+
+The assistant should check `grok_doctor`, start the authorized task, preserve its
+job ID, and read the result. In ChatGPT, it first discovers the configured aliases
+with `grok_workspaces`.
+
+## How it works
+
+```mermaid
+flowchart LR
+    ChatGPT -. "Private tunnel; account setup required" .-> Scoped["Scoped MCP adapter"]
+    Codex --> Local["Local MCP adapter"]
+    Scoped --> Jobs["Durable job mailbox"]
+    Local --> Jobs
+    Jobs --> Worker["Owned background worker"]
+    Worker <-->|"ACP / stdio"| Grok["Local Grok Build"]
+```
+
+The mailbox uses SQLite WAL. Each worker starts an independent Grok session and
+keeps its own Python runtime snapshot. A client disconnect does not itself cancel
+the job. Recovery verifies recorded process identities instead of guessing from
+a stale heartbeat.
+
+Native integration mode disables Cursor/Claude MCP scanning for the child
+process. Grok-native, plugin and managed integrations can still apply.
+
+Read the [architecture notes](plugins/grok-subagent/RESEARCH.md) for the boundaries
+between transport, job state and process lifetime.
+
+## Toolbox
+
+| Tool | Purpose |
 | --- | --- |
-| `grok_start` | 启动后台任务或显式续接已记录的会话 |
-| `grok_read` | 读取状态、增量事件和命令回执 |
-| `grok_send` | 向空闲会话发送追问 |
-| `grok_interrupt` | 中断当前轮次，不撤销已有副作用 |
-| `grok_permission` | 回应实际权限请求 |
-| `grok_close` | 关闭任务及其自有进程 |
-| `grok_recover` | 核验失联进程已停止后释放任务锁 |
-| `grok_list` | 列出近期任务 |
-| `grok_doctor` | 检查本机 CLI 与版本 |
+| `grok_start` | Start an authorized job or explicitly resume a recorded session. |
+| `grok_read` | Read status, incremental events and command receipts. |
+| `grok_send` | Continue an idle session. |
+| `grok_interrupt` | Cancel the current turn without pretending to undo side effects. |
+| `grok_permission` | Respond to a real permission request within the user's authorization. |
+| `grok_close` | Close the job and its owned processes. |
+| `grok_recover` | Recover stale job state only after verifying the recorded processes stopped. |
+| `grok_list` | List recent jobs visible to the entry point. |
+| `grok_doctor` | Check the local CLI and compatibility baseline. |
+| `grok_workspaces` | **ChatGPT:** discover locally configured workspace aliases. |
+| `grok_result` | **ChatGPT:** read full textual results in bounded pages. |
 
-ChatGPT 专用入口另提供 `grok_workspaces` 和 `grok_result`。
-接入步骤见 [ChatGPT guide](plugins/grok-subagent/CHATGPT.md)。
-**本地适配器测试不代表 ChatGPT 云端已接通。**
+## What is verified?
 
-## 测试
+| Layer | Current evidence |
+| --- | --- |
+| Automated control and isolation | Windows CI on Python 3.11 and 3.12; no Grok install or credentials required. |
+| Live Grok lifecycle | Recorded local checks for follow-ups, cancellation, file write/read, close and resume. |
+| Process failure handling | Recorded local supervisor-crash, descendant cleanup and stale-job recovery checks. |
+| ChatGPT adapter | Real local stdio-to-Grok smoke test, including result retrieval and scoped task visibility. |
+| ChatGPT cloud connection | **Not yet verified end to end.** |
+| Multi-day uptime / Linux / macOS | **Not claimed.** |
 
-普通测试仅需 Python，不要求安装 Grok，不调用模型，不消耗额度：
+The tested CLI baseline is **Grok Build 1.0.13**, not a promise of compatibility
+with every future CLI release. The latest automated status is shown by the CI badge.
+
+## Development
+
+Run the isolated test suite without Grok or model quota:
 
 ```powershell
 python -m unittest discover -s plugins/grok-subagent/tests -v
 ```
 
-Windows CI 使用模拟 ACP 对端验证控制逻辑。实际 CLI 的兼容基线是 Grok
-1.0.13；其他版本应运行显式 live 测试。暂不宣称 Linux/macOS 支持、多日稳定性
-或任意未来 CLI 版本兼容。
-
-以下为可选真实测试，使用你的登录和额度，并在用户数据目录创建独立测试任务：
+<details>
+<summary>Optional live tests: use your own login and model quota</summary>
 
 ```powershell
 python plugins/grok-subagent/tests/live_smoke.py
 python plugins/grok-subagent/tests/live_chatgpt.py
-```
-
-资源与崩溃测试另需可选依赖：
-
-```powershell
 python -m pip install -r requirements-live.txt
 python plugins/grok-subagent/tests/live_resources.py
 ```
 
-真实测试输出保存在被 Git 忽略的 `evidence/`，不要提交本机运行记录。
+These create isolated fixture tasks under your local data directory.
+Their output is Git-ignored. Never commit task databases, logs or personal results.
 
-## 安全边界
+</details>
 
-**这不是操作系统沙箱。** Grok 以本机账号权限运行，可能访问工作目录外的文件
-或网络。工作目录锁、别名、任务可见性和权限确认均不能代替 OS 隔离。
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and keep
+real model calls opt-in rather than running them automatically on pull requests.
 
-- 只运行明确授权的任务；取消不能撤销已完成修改。
-- ChatGPT 入口只适合 owner-only 私人连接，默认不开放任何目录。
-- 不适合直接提供为公开或多人共享的远程执行服务。
-- 不自动下载或升级 Grok，不读取或复制 Grok 登录凭据。
-- 任务记录可能包含敏感提示、结果和路径，请保护本机数据目录。
+## Security and limitations
 
-更多内容见 [SECURITY.md](SECURITY.md)。
+- Workspace aliases, locks and permission prompts are **not filesystem confinement**.
+- Grok runs with local-account access and may reach files or networks outside the selected directory.
+- Cancellation does not roll back completed file changes or external requests.
+- ChatGPT does not automatically wake up when a background task finishes.
+- The tunnel client and your machine must remain online for cloud access.
+- This is a single-owner tool, not a public or multi-user remote execution service.
 
-## 开发与许可
+See [SECURITY.md](SECURITY.md) before granting execution access.
 
-源代码使用 [MIT License](LICENSE)。第三方 CLI、服务和商标不在该许可证授权范围。
-公开仓库不附带 Grok 官方图标；使用产品名称仅用于说明兼容对象。
+## License
 
-贡献说明见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+[MIT](LICENSE) for this project. The [original bridge mark](plugins/grok-subagent/assets/ASSETS.md)
+is included with the project; official OpenAI and Grok artwork is not.
+Third-party services, CLIs and trademarks retain their own terms.

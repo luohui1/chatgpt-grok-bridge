@@ -13,7 +13,9 @@ venv/
 *.log
 plugins/grok-subagent/evidence/*
 !plugins/grok-subagent/evidence/.gitkeep
-plugins/grok-subagent/assets/
+plugins/grok-subagent/assets/*
+!plugins/grok-subagent/assets/bridge-mark.png
+!plugins/grok-subagent/assets/ASSETS.md
 .grok-subagent/
 .tunnel-client/
 dist/

@@ -64,8 +64,8 @@ python scripts/chatgpt_setup.py prepare --tunnel-id YOUR_ACTUAL_TUNNEL_ID
 5. 按已安装客户端的 `help quickstart` 和 `help plugin` 指引运行 doctor 并连接
    managed runtime。先检查状态的 process_running、healthy、ready，再在 ChatGPT
    开发者模式创建连接并选择 Tunnel。
-6. 公开包不附带官方图标。创建连接时可上传你有权使用的图标；若在本地添加
-   `assets/grok-icon.png`，入口可通过 MCP serverInfo 返回它，但不保证界面自动采用。
+6. 公开包提供原创标志 `assets/bridge-mark.png`，不是官方 ChatGPT/Grok 图标。
+   创建连接时可上传它；入口也通过 MCP serverInfo 返回它，但不保证界面自动采用。
 7. 刷新工具清单并确认有 11 个工具。先调用 grok_workspaces，再运行一个明确授权的
    最小任务；验证读取、追问、取消、关闭和结果分页。
 

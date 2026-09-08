@@ -15,6 +15,10 @@
     "longDescription": "Unofficial, experimental ChatGPT plugin bridge to local Grok Build. Connect through a private OpenAI Secure MCP Tunnel to start, inspect, continue, interrupt and close Grok ACP sessions. Separate account configuration is required; cloud ChatGPT end-to-end connectivity is not yet verified. Also supports local Codex MCP. Not an OS sandbox or a multi-user remote execution service.",
     "developerName": "Grok Subagent contributors",
     "category": "Productivity",
+    "brandColor": "#47E6AF",
+    "composerIcon": "./assets/bridge-mark.png",
+    "logo": "./assets/bridge-mark.png",
+    "logoDark": "./assets/bridge-mark.png",
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "Use Grok to investigate an authorized task.",

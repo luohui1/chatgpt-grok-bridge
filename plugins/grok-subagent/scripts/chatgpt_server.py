@@ -146,11 +146,11 @@ def main():
     gateway = Gateway(config)
     # Set once before handling requests; child snapshots inherit the same scope.
     os.environ["GROK_SUBAGENT_CLIENT_SCOPE"] = gateway.scope
-    icon_path = Path(__file__).resolve().parents[1] / "assets" / "grok-icon.png"
+    icon_path = Path(__file__).resolve().parents[1] / "assets" / "bridge-mark.png"
     icon = None
     if icon_path.is_file():
         icon = {"src": "data:image/png;base64," + base64.b64encode(icon_path.read_bytes()).decode("ascii"),
-                "mimeType": "image/png", "sizes": ["512x512"]}
+                "mimeType": "image/png"}
     server.serve(tools=gateway.tools, handler=gateway.invoke, instructions=INSTRUCTIONS,
                  server_name="grok-subagent-chatgpt", icon=icon)
 
