@@ -1,18 +1,18 @@
 {
   "name": "grok-subagent",
   "version": "0.3.1",
-  "description": "Unofficial Windows-first Grok Build ACP integration with durable background jobs and a private ChatGPT tunnel adapter.",
+  "description": "Unofficial ChatGPT plugin bridge to local Grok Build via private Secure MCP Tunnel and native ACP, with Codex support.",
   "author": {
     "name": "Grok Subagent contributors"
   },
   "license": "MIT",
-  "repository": "https://github.com/luohui1/grok-subagent",
+  "repository": "https://github.com/luohui1/chatgpt-grok-bridge",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Grok Subagent",
-    "shortDescription": "Control local Grok Build background sessions.",
-    "longDescription": "Unofficial, experimental integration. Start, inspect, continue, interrupt and close local Grok ACP sessions. Includes conservative crash recovery and a private ChatGPT adapter requiring separate account configuration. Not an OS sandbox or a multi-user remote execution service.",
+    "displayName": "ChatGPT Grok Bridge",
+    "shortDescription": "Connect ChatGPT to your local Grok Build.",
+    "longDescription": "Unofficial, experimental ChatGPT plugin bridge to local Grok Build. Connect through a private OpenAI Secure MCP Tunnel to start, inspect, continue, interrupt and close Grok ACP sessions. Separate account configuration is required; cloud ChatGPT end-to-end connectivity is not yet verified. Also supports local Codex MCP. Not an OS sandbox or a multi-user remote execution service.",
     "developerName": "Grok Subagent contributors",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],

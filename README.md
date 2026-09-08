@@ -1,10 +1,13 @@
-# Grok Subagent
+# ChatGPT Grok Bridge
 
 **Unofficial, experimental, Windows-first.**
 
-Control a local Grok Build CLI from Codex through native ACP and durable
-background jobs. A separate adapter prepares private ChatGPT connectivity
-through OpenAI Secure MCP Tunnel.
+An unofficial ChatGPT plugin bridge to your local Grok Build CLI, using
+OpenAI Secure MCP Tunnel and native ACP. Also supports Codex through local MCP.
+Background jobs remain controllable across client disconnects.
+
+让 ChatGPT 通过私人隧道连接本机 Grok，管理后台任务、追问、中断和结果。
+ChatGPT 账号接通需要单独配置，当前没有宣称完成云端端到端验证。
 
 This project is not affiliated with or endorsed by Grok/xAI or OpenAI.
 
@@ -22,13 +25,19 @@ This project is not affiliated with or endorsed by Grok/xAI or OpenAI.
 实际运行需要 Windows、Python 3.11+、官方 Grok Build CLI 和你自己的有效登录。
 本项目不附带 CLI、账号、密钥或模型额度。
 
+**ChatGPT：** 按 [私人接入指南](plugins/grok-subagent/CHATGPT.md) 配置本机入口、
+账号权限和 Secure MCP Tunnel。仅安装本地插件不会自动注册 ChatGPT 连接。
+
+**Codex：**
+
 ```powershell
-codex plugin marketplace add luohui1/grok-subagent
+codex plugin marketplace add luohui1/chatgpt-grok-bridge
 codex plugin add grok-subagent@grok-subagent-community
 ```
 
 新开一个 Codex 任务以加载工具。不要同时启用另一个来源的同名本地插件副本。
 也可克隆仓库后从本地 marketplace 安装。
+为兼容已有安装，内部插件 ID `grok-subagent`、工具名和 marketplace ID 保持不变。
 
 ## 使用
 
