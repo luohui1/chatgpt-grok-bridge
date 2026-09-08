@@ -5,7 +5,7 @@
 <h1 align="center">ChatGPT Grok Bridge</h1>
 
 <p align="center">
-  <strong>A private connection from ChatGPT to your local Grok Build.</strong><br>
+  <strong>Use local Grok Build as an external subagent in Codex.</strong><br>
   Start a task. Follow its progress. Stay in control.
 </p>
 
@@ -27,14 +27,15 @@
 
 ---
 
-An open-source, unofficial plugin bridge that connects ChatGPT to the Grok Build
-CLI on your own Windows machine through **OpenAI Secure MCP Tunnel** and **native
-ACP**. A direct local MCP entry point also supports Codex.
+An open-source, unofficial Codex plugin that manages local Grok Build sessions
+through **MCP** and **ACP over stdio**. It provides background jobs, follow-up
+messages and explicit lifecycle control.
 
 > [!IMPORTANT]
-> **Local integration tested. ChatGPT cloud end-to-end connection not yet verified.**
-> ChatGPT requires separate tunnel permissions, account setup and a running local
-> client. This project is not affiliated with or endorsed by OpenAI or Grok/xAI.
+> **Current scope: local Codex integration on Windows.**
+> The repository name is retained for existing links. Historical cloud adapter
+> code remains in the repository but is outside the current supported workflow.
+> This project is not affiliated with or endorsed by OpenAI or Grok/xAI.
 
 ## Why this bridge?
 
@@ -44,7 +45,6 @@ ACP**. A direct local MCP entry point also supports Codex.
 | **Durable background jobs** | An immediate job ID, incremental results and explicit command receipts. |
 | **Session control** | Follow-up messages, cancellation, permission responses, close and explicit recovery. |
 | **Local ownership** | Workspace locks, owned-process cleanup and per-job runtime snapshots. |
-| **Private ChatGPT entry point** | Workspace aliases, client-scoped task visibility and paginated full results. |
 
 Grok stays on your machine. Prompts and tool results still travel through the
 configured services; **local execution does not mean offline inference**.
@@ -53,27 +53,6 @@ configured services; **local execution does not mean offline inference**.
 
 **Requirements:** Windows, Python 3.11+, the official Grok Build CLI, and your own
 working Grok login. No CLI binaries, credentials or model credits are included.
-
-### ChatGPT
-
-Prepare the local adapter:
-
-```powershell
-git clone https://github.com/luohui1/chatgpt-grok-bridge.git
-cd chatgpt-grok-bridge
-python plugins/grok-subagent/scripts/chatgpt_setup.py init
-python plugins/grok-subagent/scripts/chatgpt_setup.py install-client
-python plugins/grok-subagent/scripts/chatgpt_setup.py status
-```
-
-Then follow the **[private ChatGPT setup guide](plugins/grok-subagent/CHATGPT.md)**
-to select a workspace, configure your actual tunnel and connect your ChatGPT
-account. Preparation alone does not establish a cloud connection.
-
-> [!WARNING]
-> No workspace is enabled by default. Enabling execution lets Grok act with your
-> local account's privileges. This is **not an OS sandbox**. Keep the tunnel
-> private and owner-only.
 
 ### Codex
 
@@ -95,19 +74,15 @@ Ask your connected assistant:
 > Do not modify files. Start it in the background and report its findings.
 
 The assistant should check `grok_doctor`, start the authorized task, preserve its
-job ID, and read the result. In ChatGPT, it first discovers the configured aliases
-with `grok_workspaces`.
+job ID, and read the result.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    ChatGPT -. "Private tunnel; account setup required" .-> Scoped["Scoped MCP adapter"]
-    Codex --> Local["Local MCP adapter"]
-    Scoped --> Jobs["Durable job mailbox"]
-    Local --> Jobs
-    Jobs --> Worker["Owned background worker"]
-    Worker <-->|"ACP / stdio"| Grok["Local Grok Build"]
+![Local Grok subagent infographic: architecture, session controls and short-run Windows measurements](docs/assets/grok-local-infographic.png)
+
+```text
+Codex -> MCP server -> SQLite job mailbox -> background worker <-> Grok Build
+                                                            ACP / stdio
 ```
 
 The mailbox uses SQLite WAL. Each worker starts an independent Grok session and
@@ -120,6 +95,21 @@ process. Grok-native, plugin and managed integrations can still apply.
 
 Read the [architecture notes](plugins/grok-subagent/RESEARCH.md) for the boundaries
 between transport, job state and process lifetime.
+
+## Performance profile
+
+The plugin is a single-user control layer, not a model server or Codex's native
+`spawn_agent` implementation.
+
+| Measurement | Recorded Windows short test |
+| --- | --- |
+| Background working set | About **112 MiB**, median across sampled processes |
+| Dispatch latency | About **0.1 s** to return a job ID, not complete the task |
+| Cancellation response | About **0.53 s**, one measurement |
+
+Memory includes the supervisor, Grok and console helper, excluding the Codex
+application. These are short-run observations, not performance guarantees.
+Completion time depends on the model, network and task.
 
 ## Toolbox
 
@@ -134,8 +124,6 @@ between transport, job state and process lifetime.
 | `grok_recover` | Recover stale job state only after verifying the recorded processes stopped. |
 | `grok_list` | List recent jobs visible to the entry point. |
 | `grok_doctor` | Check the local CLI and compatibility baseline. |
-| `grok_workspaces` | **ChatGPT:** discover locally configured workspace aliases. |
-| `grok_result` | **ChatGPT:** read full textual results in bounded pages. |
 
 ## What is verified?
 
@@ -144,8 +132,6 @@ between transport, job state and process lifetime.
 | Automated control and isolation | Windows CI on Python 3.11 and 3.12; no Grok install or credentials required. |
 | Live Grok lifecycle | Recorded local checks for follow-ups, cancellation, file write/read, close and resume. |
 | Process failure handling | Recorded local supervisor-crash, descendant cleanup and stale-job recovery checks. |
-| ChatGPT adapter | Real local stdio-to-Grok smoke test, including result retrieval and scoped task visibility. |
-| ChatGPT cloud connection | **Not yet verified end to end.** |
 | Multi-day uptime / Linux / macOS | **Not claimed.** |
 
 The tested CLI baseline is **Grok Build 1.0.13**, not a promise of compatibility
@@ -164,7 +150,6 @@ python -m unittest discover -s plugins/grok-subagent/tests -v
 
 ```powershell
 python plugins/grok-subagent/tests/live_smoke.py
-python plugins/grok-subagent/tests/live_chatgpt.py
 python -m pip install -r requirements-live.txt
 python plugins/grok-subagent/tests/live_resources.py
 ```
@@ -179,11 +164,9 @@ real model calls opt-in rather than running them automatically on pull requests.
 
 ## Security and limitations
 
-- Workspace aliases, locks and permission prompts are **not filesystem confinement**.
+- Workspace locks and permission prompts are **not filesystem confinement**.
 - Grok runs with local-account access and may reach files or networks outside the selected directory.
 - Cancellation does not roll back completed file changes or external requests.
-- ChatGPT does not automatically wake up when a background task finishes.
-- The tunnel client and your machine must remain online for cloud access.
 - This is a single-owner tool, not a public or multi-user remote execution service.
 
 See [SECURITY.md](SECURITY.md) before granting execution access.

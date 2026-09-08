@@ -5,7 +5,7 @@
 <h1 align="center">ChatGPT Grok Bridge</h1>
 
 <p align="center">
-  <strong>让 ChatGPT 私人连接你本机的 Grok Build。</strong><br>
+  <strong>在 Codex 中将本机 Grok Build 作为外部子代理使用。</strong><br>
   后台执行，持续追问，随时掌握任务状态。
 </p>
 
@@ -27,12 +27,12 @@
 
 ---
 
-一个开源、非官方的 ChatGPT 插件桥接器，通过 **OpenAI Secure MCP Tunnel**
-和 **原生 ACP 协议**连接 Windows 本机的 Grok Build CLI，同时支持 Codex 本地 MCP。
+一个开源、非官方的 Codex 插件，通过 **MCP** 和 **ACP stdio**
+管理本机 Grok Build 会话，提供后台任务、连续追问和明确的生命周期控制。
 
 > [!IMPORTANT]
-> **本地集成已测试；ChatGPT 云端尚未完成端到端验证。**
-> 你仍需单独配置隧道权限、账号连接，并保持本机客户端运行。
+> **当前范围：Windows 上的 Codex 本地集成。**
+> 仓库名称保留以兼容已有链接。历史云端适配代码保留，但不属于当前支持的使用路径。
 > 本项目与 OpenAI、Grok/xAI 无隶属或官方背书关系。
 
 ## 为什么做这个桥接器？
@@ -43,7 +43,6 @@
 | **持久后台任务** | 立即返回任务 ID，提供增量结果和明确的命令回执。 |
 | **完整会话控制** | 追问、中断、权限回应、关闭和显式恢复。 |
 | **本地任务管理** | 工作目录锁、自有进程清理和每任务运行代码快照。 |
-| **ChatGPT 私人入口** | 目录别名、任务可见性隔离和完整文字结果分页。 |
 
 Grok 运行在你的电脑上，但提示和工具结果仍会经过所配置的服务。
 **本地执行不等于离线推理。**
@@ -52,25 +51,6 @@ Grok 运行在你的电脑上，但提示和工具结果仍会经过所配置的
 
 **前提：** Windows、Python 3.11+、官方 Grok Build CLI，以及你自己的有效 Grok 登录。
 本项目不附带 CLI、账号、密钥或模型额度。
-
-### 接入 ChatGPT
-
-先准备本地入口：
-
-```powershell
-git clone https://github.com/luohui1/chatgpt-grok-bridge.git
-cd chatgpt-grok-bridge
-python plugins/grok-subagent/scripts/chatgpt_setup.py init
-python plugins/grok-subagent/scripts/chatgpt_setup.py install-client
-python plugins/grok-subagent/scripts/chatgpt_setup.py status
-```
-
-然后按 **[ChatGPT 私人接入指南](plugins/grok-subagent/CHATGPT.md)** 配置工作目录、
-实际 Tunnel ID 和账号连接。只完成本地准备，不代表已经接通云端。
-
-> [!WARNING]
-> 默认不开放任何工作目录。启用执行后，Grok 使用本机账号权限运行。
-> 这**不是操作系统沙箱**，隧道应仅供本人使用。
 
 ### 接入 Codex
 
@@ -90,18 +70,14 @@ codex plugin add grok-subagent@grok-subagent-community
 > 先在后台执行，再告诉我检查结果。
 
 助手应先调用 `grok_doctor`，再启动任务、保留任务 ID 并读取结果。
-在 ChatGPT 中，先通过 `grok_workspaces` 获取本地已配置的目录别名。
 
 ## 工作原理
 
-```mermaid
-flowchart LR
-    ChatGPT -. "私人隧道；需单独配置账号" .-> Scoped["隔离的 MCP 入口"]
-    Codex --> Local["本地 MCP 入口"]
-    Scoped --> Jobs["持久任务队列"]
-    Local --> Jobs
-    Jobs --> Worker["自有后台进程"]
-    Worker <-->|"ACP / stdio"| Grok["本机 Grok Build"]
+![Grok 外部子代理信息图：本地架构、会话控制与 Windows 短时性能测量](docs/assets/grok-local-infographic.png)
+
+```text
+Codex -> MCP 服务 -> SQLite 任务信箱 -> 后台 Worker <-> Grok Build
+                                                 ACP / stdio
 ```
 
 任务状态存放于 SQLite WAL。每个 worker 启动独立 Grok 会话，并保存自己的
@@ -110,6 +86,20 @@ Python 运行代码快照。客户端断连本身不会取消任务；失联恢�
 
 默认轻量模式仅对该子进程关闭 Cursor/Claude MCP 配置扫描；
 Grok 自身、插件和受管集成仍可能生效。详见 [架构说明](plugins/grok-subagent/RESEARCH.md)。
+
+## 定位与性能
+
+项目定位为单用户的外部代理控制层，复用现有 Grok Build 安装与登录。
+它不是模型服务，也不是 Codex 原生 `spawn_agent` 的实现。
+
+| 指标 | Windows 短时实测 |
+| --- | --- |
+| 后台进程工作集 | 采样中位数约 **112 MiB** |
+| 任务派发延迟 | 约 **0.1 秒**，仅指返回任务 ID |
+| 中断响应时间 | 单次测量约 **0.53 秒** |
+
+内存统计包含后台管理进程、Grok 和控制台辅助进程，不包含 Codex 主程序。
+以上为短时观察值，不是性能承诺；任务完成耗时取决于模型、网络和任务复杂度。
 
 ## 工具一览
 
@@ -124,8 +114,6 @@ Grok 自身、插件和受管集成仍可能生效。详见 [架构说明](plugi
 | `grok_recover` | 确认记录中的进程已停止后，恢复失联任务状态。 |
 | `grok_list` | 列出该入口可见的近期任务。 |
 | `grok_doctor` | 检查本机 CLI 和兼容基线。 |
-| `grok_workspaces` | **ChatGPT 专用：** 获取本地配置的目录别名。 |
-| `grok_result` | **ChatGPT 专用：** 分页读取完整文字结果。 |
 
 ## 验证到什么程度？
 
@@ -134,8 +122,6 @@ Grok 自身、插件和受管集成仍可能生效。详见 [架构说明](plugi
 | 自动化控制与隔离 | Windows / Python 3.11、3.12 CI；无需 Grok 安装、账号或额度。 |
 | 真实 Grok 生命周期 | 已记录本地追问、中断、文件写读、关闭和恢复检查。 |
 | 进程故障处理 | 已记录后台管理进程崩溃、子进程清理和失联恢复检查。 |
-| ChatGPT 适配器 | 本机 stdio 到真实 Grok 的测试，包括结果读取和任务可见性。 |
-| ChatGPT 云端连接 | **尚未完成端到端验证。** |
 | 多日连续运行 / Linux / macOS | **不作已验证承诺。** |
 
 CLI 兼容基线为 **Grok Build 1.0.13**，不代表未来所有版本都兼容。
@@ -154,7 +140,6 @@ python -m unittest discover -s plugins/grok-subagent/tests -v
 
 ```powershell
 python plugins/grok-subagent/tests/live_smoke.py
-python plugins/grok-subagent/tests/live_chatgpt.py
 python -m pip install -r requirements-live.txt
 python plugins/grok-subagent/tests/live_resources.py
 ```
@@ -168,11 +153,9 @@ python plugins/grok-subagent/tests/live_resources.py
 
 ## 安全边界
 
-- 目录别名、目录锁和权限确认均**不是文件系统隔离**。
+- 目录锁和权限确认均**不是文件系统隔离**。
 - Grok 使用本机账号权限，可能访问指定目录之外的文件或网络。
 - 取消不能回滚已经发生的文件修改或外部请求。
-- 后台完成不会保证自动唤醒已结束的 ChatGPT 回合。
-- 云端访问需要本机和隧道客户端持续在线。
 - 这是单用户私人工具，不是公开或多人共享的远程执行服务。
 
 授予执行权限前，请阅读 [SECURITY.md](SECURITY.md)。
