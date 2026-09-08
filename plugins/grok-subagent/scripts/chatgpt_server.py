@@ -115,7 +115,7 @@ class Gateway:
                 raise ValueError("Invalid limit")
             path = Path(job["result_path"]).resolve()
             expected = (store.DATA / job["job_id"] / "result.md").resolve()
-            if path != expected or not path.is_relative_to(store.DATA):
+            if path != expected or not path.is_relative_to(store.DATA.resolve()):
                 raise ValueError("Result path is outside task storage")
             text = ""
             if path.is_file():

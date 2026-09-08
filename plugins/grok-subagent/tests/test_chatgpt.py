@@ -105,6 +105,18 @@ class ChatGPTTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "outside"):
             self.gateway.invoke("grok_result", {"job_id": remote["job_id"]})
 
+    def test_result_storage_alias_is_normalized(self):
+        remote = self.start()
+        job = store.get(remote["job_id"])
+        Path(job["result_path"]).write_text("inside", encoding="utf-8")
+        original = store.DATA
+        try:
+            store.DATA = original / ".." / original.name
+            result = self.gateway.invoke("grok_result", {"job_id": remote["job_id"]})
+            self.assertEqual(result["text"], "inside")
+        finally:
+            store.DATA = original
+
     def test_revoked_execution_still_allows_interruption(self):
         remote = self.start()
         self.gateway.workspaces["fixture"]["allow_execution"] = False
