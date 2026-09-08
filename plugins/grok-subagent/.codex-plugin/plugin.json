@@ -1,0 +1,25 @@
+{
+  "name": "grok-subagent",
+  "version": "0.3.1",
+  "description": "Unofficial Windows-first Grok Build ACP integration with durable background jobs and a private ChatGPT tunnel adapter.",
+  "author": {
+    "name": "Grok Subagent contributors"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/luohui1/grok-subagent",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Grok Subagent",
+    "shortDescription": "Control local Grok Build background sessions.",
+    "longDescription": "Unofficial, experimental integration. Start, inspect, continue, interrupt and close local Grok ACP sessions. Includes conservative crash recovery and a private ChatGPT adapter requiring separate account configuration. Not an OS sandbox or a multi-user remote execution service.",
+    "developerName": "Grok Subagent contributors",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "Use Grok to investigate an authorized task.",
+      "Check the progress of my Grok jobs.",
+      "Interrupt my Grok task and send a correction."
+    ]
+  }
+}

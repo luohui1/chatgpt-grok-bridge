@@ -1,0 +1,2 @@
+# Optional live resource/crash probe only. The runtime and ordinary tests use stdlib.
+psutil>=5.9,<8
