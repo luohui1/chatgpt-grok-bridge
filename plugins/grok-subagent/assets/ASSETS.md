@@ -21,6 +21,12 @@ no slash-orb, no gradients, shadows, mockups, robots or decorative circuitry.
 
 ## README structure references
 
+The architecture diagram at `docs/assets/grok-local-infographic.png` is a generated
+illustration containing depictions of ChatGPT and Grok brand symbols for
+identification. It is not official artwork and does not imply endorsement.
+Third-party trademarks are not relicensed by the project's MIT license.
+The filename is retained for existing image links.
+
 The documentation borrows organizational patterns, not copy or brand graphics:
 
 - OpenAI Codex: concise positioning and a short installation path.

@@ -73,7 +73,10 @@ codex plugin add grok-subagent@grok-subagent-community
 
 ## 工作原理
 
-![Grok 外部子代理信息图：本地架构、会话控制与 Windows 短时性能测量](docs/assets/grok-local-infographic.png)
+![Grok 外部子代理原理图：Codex、MCP、SQLite 任务信箱、后台 Worker 与 Grok Build](docs/assets/grok-local-infographic.png)
+
+图中的 ChatGPT 与 Grok 图标仅用于品牌识别；当前入口为 Codex 本地客户端，
+不表示支持 ChatGPT 云端接入。
 
 ```text
 Codex -> MCP 服务 -> SQLite 任务信箱 -> 后台 Worker <-> Grok Build
@@ -163,4 +166,4 @@ python plugins/grok-subagent/tests/live_resources.py
 ## 许可
 
 项目采用 [MIT 许可证](LICENSE)，包含随项目提供的 [原创桥梁标志](plugins/grok-subagent/assets/ASSETS.md)。
-不附带 OpenAI 或 Grok 官方图形；第三方服务、CLI 和商标仍适用各自条款。
+原理图中的品牌图标仅用于识别，不代表官方背书；第三方服务、CLI 和商标仍适用各自条款。

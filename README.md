@@ -78,7 +78,10 @@ job ID, and read the result.
 
 ## How it works
 
-![Local Grok subagent infographic: architecture, session controls and short-run Windows measurements](docs/assets/grok-local-infographic.png)
+![Local Grok subagent architecture: Codex, MCP, SQLite mailbox, worker and Grok Build](docs/assets/grok-local-infographic.png)
+
+The ChatGPT and Grok symbols identify the respective brands only. The entry point
+shown here is the local Codex client, not ChatGPT cloud access.
 
 ```text
 Codex -> MCP server -> SQLite job mailbox -> background worker <-> Grok Build
@@ -174,5 +177,6 @@ See [SECURITY.md](SECURITY.md) before granting execution access.
 ## License
 
 [MIT](LICENSE) for this project. The [original bridge mark](plugins/grok-subagent/assets/ASSETS.md)
-is included with the project; official OpenAI and Grok artwork is not.
+is included with the project. Brand symbols depicted in the architecture diagram
+are for identification only and do not imply endorsement.
 Third-party services, CLIs and trademarks retain their own terms.
